@@ -24,6 +24,8 @@
 (defvar *box-height* (+ (* *remarkable-height* -1) 55))
 (defvar *box-width*  (- *remarkable-width* (* *page-border* 2)))
 
+(defvar *start-hour* 6)
+(defvar *end-hour* 18)
 
 (defun reload() (ql:quickload :ics2pdf) (devel))
 (defun runtests ()  (fiveam:run!))
@@ -110,6 +112,18 @@
     ))
 
 
+(defun draw-calendar-marks ()
+  (format t "Drawing calendar marks~%")
+
+  (pdf:set-gray-fill 0.5)
+
+  (loop for a from *start-hour* to *end-hour*
+        do (progn
+             (format t "~s~%" a)
+             (pdf:move-to (+ 10 (random 500))(+ 10 (random 400)))
+             (pdf:line-to (+ 50 (random 500)) (+ 50 (random 10 )))
+             )
+        ))
 
 
 (defun create-pdf (event-list &optional (filename "ex5.pdf"))
@@ -129,6 +143,8 @@
         (draw-backing-surface box-width box-height)
 
         (pdf:translate 0 *box-offset-y*) ;; probably shouldnt be necessary
+
+        (draw-calendar-marks)
 
         (draw-event (first event-list))
 
