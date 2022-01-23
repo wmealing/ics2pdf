@@ -65,7 +65,7 @@
       (pdf:translate *page-border*
                      (- *remarkable-height* (+ *page-border* *element-padding*)))
       (pdf:set-font (pdf:get-font "Helvetica") 32)
-      (pdf:draw-text "Jan 20 2022"))))
+      (pdf:draw-text "Jan 20 2022")      )))
 
 (defun draw-backing-surface (box-width box-height)
   (pdf:with-saved-state
@@ -88,42 +88,58 @@
     (encode-universal-time 0 0 users-hour date month year tz)
     ))
 
+
+(defun calculate-position (time event)
+  (let* ((starting-hour (find-hour-of-day *start-hour* event)) ;; start of the visible time.
+         (ending-hour   (find-hour-of-day *end-hour* event)) ;; end of the visible time.
+         (offset-from-starting-hour (- time starting-hour))
+         (start-to-end-delta (- ending-hour starting-hour))
+         (ratio (/ (* -1 start-to-end-delta ) *box-height* ))
+         (position (/ offset-from-starting-hour ratio))
+         )
+    position
+    ))
+
+
 (defun draw-event (event)
   (format t "Drawing event..~%")
 
   ;; ive chosen thse as arbitary
-  (let* ( (six-am (find-hour-of-day 6 event))   ;; start of the visible time.
-          (six-pm (find-hour-of-day 18 event))  ;; end of the visible time.
-          (event-start-offset-from-six-am (- (calendar-event-start event) six-am))
-          (event-end-offset-from-six-am (- (calendar-event-end event) six-am))
-          (six-to-six-delta (- six-pm six-am))
-          (ratio (/ (* -1 six-to-six-delta ) *box-height* ) )
-          (start (/ event-start-offset-from-six-am ratio))
-          (end (/ event-end-offset-from-six-am ratio))
-          )
+  (let* ((start-position (calculate-position (calendar-event-start event) event))
+         (end-position  (calculate-position (calendar-event-end event) event)))
 
     (pdf:with-saved-state
-      (pdf:set-rgb-stroke 0 0 0)
+      (pdf:set-rgb-stroke 0.5 0.5 0.5)
       (pdf:set-rgb-fill 0.8 0.8 0.8)
-      (pdf:rectangle *box-offset-x* (* -1 start)  *box-width* (* -1 end) :radius 4) ;; working.
+      (pdf:rectangle *box-offset-x* (* -1 start-position)  *box-width* (* -1 end-position) :radius 4) ;; negative, because it needs to grow down.
       (pdf:close-fill-and-stroke)
       )
-
     ))
 
-
 (defun draw-calendar-marks ()
-  (format t "Drawing calendar marks~%")
 
-  (pdf:set-gray-fill 0.5)
+  (defvar divisions (/ *box-height*  (- *end-hour* *start-hour* )))
 
-  (loop for a from *start-hour* to *end-hour*
+  (loop for i from *start-hour* to *end-hour*
         do (progn
-             (format t "~s~%" a)
-             (pdf:move-to (+ 10 (random 500))(+ 10 (random 400)))
-             (pdf:line-to (+ 50 (random 500)) (+ 50 (random 10 )))
+
+             (pdf:with-saved-state
+               (pdf:move-to 0 0)
+               (pdf:line-to 20 0 )
+
+               (pdf:close-fill-and-stroke)
+               (pdf:close-even-odd-fill-and-stroke)
+               (pdf:set-font (pdf:get-font "Helvetica") 6)
+               (pdf:translate 3 -8)
+               (pdf:draw-text (format nil "~2,'0d:00"  i  "00") )
+               )
+
+             (pdf:translate 0 divisions ) ;; probably shouldnt be necessary
+
              )
-        ))
+
+        )
+  )
 
 
 (defun create-pdf (event-list &optional (filename "ex5.pdf"))
