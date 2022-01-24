@@ -1,5 +1,6 @@
 # ics2pdf
-### _wmealing@gmail.com_
+
+### Remarkable tablet calendar tool.
 
 This project is a command line tool that turns a ics file or link into a pdf file.
 
