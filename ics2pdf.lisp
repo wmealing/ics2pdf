@@ -49,10 +49,9 @@
 (defun devel ()
   (format t "lets go~%")
 
-  ;;                                                                         S M H D M YYYY
-  (let ((event-list (list (make-calendar-event :start (encode-universal-time 0 0 7 1 1 1920)
-                                               :end   (encode-universal-time 0 0 8 1 1 1920)
-                                               :summary "event"))))
+  (let ((event-list (list (make-calendar-event :start (encode-universal-time 0  0 7 1 1 1920)
+                                               :end   (encode-universal-time 0 30 7 1 1 1920)
+                                               :summary "This is a calendar event"))))
     (create-pdf event-list )
     )
   )
@@ -76,7 +75,7 @@
       (pdf:rectangle 0 0
                      box-width
                      box-height )
-      (pdf:close-fill-and-stroke))))
+      (pdf:close-fill-and-stroke)))  )
 
 (defun find-hour-of-day (users-hour event)
   ;; desconstruct the time
@@ -109,36 +108,44 @@
          (end-position  (calculate-position (calendar-event-end event) event)))
 
     (pdf:with-saved-state
-      (pdf:set-rgb-stroke 0.5 0.5 0.5)
+      ;;      (pdf:set-rgb-stroke 0.5 0.5 0.5)
       (pdf:set-rgb-fill 0.8 0.8 0.8)
       (pdf:rectangle *box-offset-x* (* -1 start-position)  *box-width* (* -1 end-position) :radius 4) ;; negative, because it needs to grow down.
       (pdf:close-fill-and-stroke)
-      )
-    ))
+      (pdf:in-text-mode
+        (pdf:set-rgb-fill 0 0 0)
+        (pdf:set-rgb-stroke 0 0 0 )
+        (pdf:set-font (pdf:get-font "Helvetica") 12)
+        (pdf:translate (+ *box-offset-x* *element-padding*)  (- (* -1 start-position) *element-padding*))
+        (pdf:draw-text (calendar-event-summary event))
+        ))))
 
 (defun draw-calendar-marks ()
 
   (defvar divisions (/ *box-height*  (- *end-hour* *start-hour* )))
 
-  (loop for i from *start-hour* to *end-hour*
-        do (progn
+  (pdf:with-saved-state
 
-             (pdf:with-saved-state
-               (pdf:move-to 0 0)
-               (pdf:line-to 20 0 )
+    (loop for i from *start-hour* to *end-hour*
+          do (progn
 
-               (pdf:close-fill-and-stroke)
-               (pdf:close-even-odd-fill-and-stroke)
-               (pdf:set-font (pdf:get-font "Helvetica") 6)
-               (pdf:translate 3 -8)
-               (pdf:draw-text (format nil "~2,'0d:00"  i  "00") )
+               (pdf:with-saved-state
+                 (pdf:move-to 0 0)
+                 (pdf:line-to 20 0 )
+
+                 (pdf:close-fill-and-stroke)
+                 (pdf:close-even-odd-fill-and-stroke)
+                 (pdf:set-font (pdf:get-font "Helvetica") 6)
+                 (pdf:translate 3 -8)
+                 (pdf:draw-text (format nil "~2,'0d:00"  i  "00") )
+                 )
+
+               (pdf:translate 0 divisions ) ;; probably shouldnt be necessary
+
                )
 
-             (pdf:translate 0 divisions ) ;; probably shouldnt be necessary
+          ))
 
-             )
-
-        )
   )
 
 
