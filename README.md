@@ -1,4 +1,4 @@
-# ics2pdf
+# A read-only calendar for our remarkable. 
 
 ### Remarkable tablet calendar tool.
 
